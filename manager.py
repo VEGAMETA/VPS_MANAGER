@@ -53,6 +53,22 @@ def choose_menu() -> None:
         if choice == back: break
         server_menu(servers.servers[choice - 1])
 
+def transfer_menu(server: ServerHandler) -> None:
+    while True:
+        print("1. Transfer file to server")
+        print("2. Transfer directory to server")
+        print("3. Transfer file from server")
+        print("4. Transfer directory from server")
+        print("5. Back")
+        choice = input("Choose an option: ")
+        match choice:
+            case "1": server.transfer_files_from_server(input("Enter needed path: "), input("Enter desdination path(H:/Downloads/ by default): "))
+            case "2": server.transfer_files_from_server(input("Enter needed path: "), input("Enter desdination path(H:/Downloads/ by default): "), True)
+            case "3": server.transfer_files_to_server(input("Enter needed path: "), input("Enter desdination path(/home/username/ by default): "))
+            case "4": server.transfer_files_to_server(input("Enter needed path: "), input("Enter desdination path(/home/username/ by default): "), True)
+            case "5": break
+            case _: print("Invalid option")
+
 def server_menu(server: ServerHandler) -> None:
     answer = ""
     while True:
@@ -66,7 +82,8 @@ def server_menu(server: ServerHandler) -> None:
         print("5. Set up server (initialize port knocking)") 
         print("6. Link port")
         print("7. Server settings")
-        print("8. Back")
+        print("8. Transfer files")
+        print("9. Back")
         _choice = input("Choose an option: ")
         answer = ""
         match _choice:
@@ -78,7 +95,8 @@ def server_menu(server: ServerHandler) -> None:
             case "6": server.link_port(get_port())
             case "7": 
                 if settings_menu(server): break
-            case "8": break
+            case "8": transfer_menu(server)
+            case "9": break
             case _: print("Invalid option")
 
 def settings_menu(server: ServerHandler) -> bool:

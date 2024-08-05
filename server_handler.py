@@ -135,11 +135,20 @@ cat ~/.ssh/id_ed25519.pub""".replace('\r\n','\n')
                 subprocess.Popen(['clip'], stdin=subprocess.PIPE).communicate(key.encode())
                 return "SSH key copied to clipboard!\n"
         else:
-            self.knock_server()
-            subprocess.run(f"scp -P {self.port} {self.username}@{self.ip}:/home/{self.username}/.ssh/id_ed25519.pub {str(self.script_paths.get('key_path').absolute())}")
+            self.transfer_files_from_server("/home/username/.ssh/id_ed25519.pub", str(self.script_paths.get('key_path').absolute()))
             self.check_key()
             if self.initialized: return "SSH key downloaded"
             else: return "Error occurred"
+
+    def transfer_files_from_server(self, needed_path: str, desdination: str, folder=False):
+        if not desdination: desdination = "H:/Dowloads/"
+        self.knock_server()
+        subprocess.run(f"scp {'-r' if folder else ''} -P {self.port} {self.username}@{self.ip}:{needed_path} {desdination}")
+
+    def transfer_files_to_server(self, needed_path: str, desdination: str, folder=False):
+        if not desdination: desdination = f"/home/{self.username}"
+        self.knock_server()
+        subprocess.run(f"scp {'-r' if folder else ''} -P {self.port} {desdination} {self.username}@{self.ip}:{needed_path}")
 
     def check_key(self) -> None:
         self.initialized = self.script_paths.get('key_path').exists()
