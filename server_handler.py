@@ -45,7 +45,7 @@ sudo apt update
 sudo apt upgrade -y
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
 echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
-sudo apt install -y python-is-python3 knockd tmux zsh mc vim git iptables-persistent
+sudo apt install -y python-is-python3 python3.11-venv knockd tmux zsh mc vim git iptables-persistent
 sudo apt autoremove -y
 
 
@@ -126,20 +126,24 @@ cat ~/.ssh/id_ed25519.pub""".replace('\r\n','\n')
     def init_server(self) -> None:
         if not self.initialized:
             self.transfer_init_script()
-            subprocess.run(f"ssh {self.username}@{self.ip} -t 'chmod +x ./init.sh; ./init.sh'")
+            subprocess.run(f"ssh {self.username}@{self.ip} -t chmod +x ~/init.sh; ~/init.sh")
 
     def get_ssh_key(self) -> None:
         if self.script_paths.get('key_path').exists():
-            with open(self.script_paths.get('key_path'), 'r') as f:
-                key = f.read()
-                subprocess.Popen(['clip'], stdin=subprocess.PIPE).communicate(key.encode())
-                return "SSH key copied to clipboard!\n"
+            return self.copy_key()
         else:
-            self.transfer_files_from_server("/home/username/.ssh/id_ed25519.pub", str(self.script_paths.get('key_path').absolute()))
+            self.transfer_files_from_server(f"/home/{self.username}/.ssh/id_ed25519.pub", str(self.script_paths.get('key_path').absolute()))
             self.check_key()
-            if self.initialized: return "SSH key downloaded"
+            if self.initialized:
+                return "SSH key downloaded\n" + self.copy_key()
             else: return "Error occurred"
 
+    def copy_key(self) -> None:
+        with open(self.script_paths.get('key_path'), 'r') as f:
+            key = f.read()
+            subprocess.Popen(['clip'], stdin=subprocess.PIPE).communicate(key.encode())
+            return "SSH key copied to clipboard!\n"
+    
     def transfer_files_from_server(self, needed_path: str, desdination: str, folder=False):
         if not desdination: desdination = "H:/Dowloads/"
         self.knock_server()
@@ -167,7 +171,7 @@ cat ~/.ssh/id_ed25519.pub""".replace('\r\n','\n')
     
     def reboot(self) -> None:
         self.knock_server()
-        subprocess.run(f"ssh {self.username}@{self.ip} -p {self.port} -t 'sudo shutdown -r now'")
+        subprocess.run(f"ssh {self.username}@{self.ip} -p {self.port} -t sudo shutdown -r now")
     
     def __repr__(self) -> str:
         return f"{self.label} {self.username}@{self.ip}:{self.port} knock ports {', '.join(map(str, self.ports))}"
